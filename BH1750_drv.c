@@ -1,6 +1,7 @@
 #include "BH1750_drv.h"
 #include <intrinsics.h>
 #include <iostm8s103f3.h>
+#include <stm8s_type.h>
 
 //Таймаут ожидания события I2C
 static unsigned long int i2c_timeout;
@@ -59,7 +60,7 @@ void BH1750_init(){
 //******************************************************************************
 // Преобразование и чтение результата измерения освещенности
 //******************************************************************************                                   
-void BH1750_read(unsigned char address, char * data){                                  
+void BH1750_read(unsigned char address, char * data){          
   //Преобразование
   
   //Ждем освобождения шины I2C
@@ -109,19 +110,12 @@ void BH1750_read(unsigned char address, char * data){
   
   //Записываем в регистр данных адрес ведомого устройства 0x23 7bit
   I2C_DR = (address << 1) | 0x01;
+  
   //Ждем подтверждения передачи адреса
   wait_event(!I2C_SR1_ADDR, 1);
-  //Очистка бита ADDR чтением регистра SR3
-  I2C_SR3;
-  
-  //Ждем освобождения регистра данных RD
-  wait_event(!I2C_SR1_TXE, 1);
-  
   
     //Бит который разрешает NACK на следующем принятом байте
     I2C_CR2_POS = 1;
-    //Ждем подтверждения передачи адреса
-    wait_event(!I2C_SR1_ADDR, 1);
     //Заплатка из Errata
     __disable_interrupt();
     //Очистка бита ADDR чтением регистра SR3
@@ -142,8 +136,7 @@ void BH1750_read(unsigned char address, char * data){
     *data++ = I2C_DR;
     //Заплатка из Errata
     __enable_interrupt();
-    *data = I2C_DR;
-  
+    *data= I2C_DR; 
   
   //Ждем отправки СТОП посылки
   wait_event(I2C_CR2_STOP, 1);
