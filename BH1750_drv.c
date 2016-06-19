@@ -18,7 +18,7 @@ static unsigned long int i2c_timeout;
 //в течении времени timeout в мс
 #define wait_event(event, timeout) set_tmo_ms(timeout);\
                                    while(event && --i2c_timeout);\
-                                   if(!i2c_timeout) return;
+                                   if(!i2c_timeout){ BH1750_init(); return;}
                                    
                                    
 //******************************************************************************
@@ -26,6 +26,10 @@ static unsigned long int i2c_timeout;
 //******************************************************************************                                   
 void BH1750_init(){
   unsigned long int ccr;
+  
+  I2C_CR2_SWRST=1;
+  I2C_CR2_SWRST=0;
+  //delay_ms(1000);
   
   //Настройка GPIO
   PB_DDR_bit.DDR4 = 0;
@@ -62,7 +66,7 @@ void BH1750_init(){
 //******************************************************************************                                   
 void BH1750_read(unsigned char address, char * data){          
   //Преобразование
-  
+
   //Ждем освобождения шины I2C
   wait_event(I2C_SR3_BUSY, 10);
     
@@ -93,7 +97,7 @@ void BH1750_read(unsigned char address, char * data){
   wait_event(I2C_CR2_STOP, 1);
   
   //Выждим 200ms
-  delay_ms(200);
+  delay_ms(150);
   
   ///Читаем
   
